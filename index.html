@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AbujaFresh - Market Price Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container-main {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      animation: slideDown 0.6s ease-out;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #1a365d;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .header p {
+      font-size: 1rem;
+      color: #4a5568;
+      font-weight: 500;
+    }
+
+    .content-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    .card h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1a365d;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 6px;
+    }
+
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .form-group select:focus,
+    .form-group input:focus {
+      outline: none;
+      border-color: #3182ce;
+      box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1rem;
+      margin-top: 8px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(49, 130, 206, 0.3);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .price-list {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .price-item {
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      border-left: 4px solid #3182ce;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .price-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .price-item-name {
+      font-weight: 600;
+      color: #1a365d;
+      font-size: 1rem;
+    }
+
+    .price-item-price {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #3182ce;
+    }
+
+    .price-item-meta {
+      font-size: 0.85rem;
+      color: #718096;
+      margin-bottom: 8px;
+    }
+
+    .price-item-trend {
+      display: inline-block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-right: 8px;
+    }
+
+    .trend-up {
+      background: #fed7d7;
+      color: #c53030;
+    }
+
+    .trend-down {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+
+    .trend-neutral {
+      background: #e6fffa;
+      color: #234e52;
+    }
+
+    .delete-btn {
+      background: #feb2b2;
+      color: #c53030;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .delete-btn:hover {
+      background: #fc8181;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-box {
+      background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%);
+      color: white;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .chart-container {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      margin-bottom: 24px;
+      animation: fadeIn 0.6s ease-out 0.1s both;
+    }
+
+    .chart-container h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1a365d;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    #priceChart {
+      max-height: 300px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px;
+      color: #718096;
+    }
+
+    .empty-state p {
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+
+    .filter-controls {
+      margin-bottom: 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 8px 16px;
+      background: #e2e8f0;
+      border: 2px solid #cbd5e0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #2d3748;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover {
+      border-color: #3182ce;
+      color: #3182ce;
+    }
+
+    .filter-btn.active {
+      background: #3182ce;
+      color: white;
+      border-color: #3182ce;
+    }
+
+    @media (max-width: 768px) {
+      .content-wrapper {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header h1 {
+        font-size: 1.75rem;
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a0aec0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container-main">
+    <div class="header">
+      <h1>🍅 AbujaFresh</h1>
+      <p>Track local market prices in Abuja</p>
+    </div>
+
+    <div class="content-wrapper">
+      <!-- Form Card -->
+      <div class="card">
+        <h2>Add Price Entry</h2>
+        <form id="priceForm">
+          <div class="form-group">
+            <label for="itemSelect">Select Item</label>
+            <select id="itemSelect" required>
+              <option value="">-- Choose an item --</option>
+              <option value="Yam">Yam (kg)</option>
+              <option value="Tomatoes">Tomatoes (basket)</option>
+              <option value="Garri">Garri (kg)</option>
+              <option value="Rice">Rice (kg)</option>
+              <option value="Cassava">Cassava (kg)</option>
+              <option value="Plantains">Plantains (bunch)</option>
+              <option value="Pepper">Pepper (kg)</option>
+              <option value="Onions">Onions (kg)</option>
+              <option value="Eggs">Eggs (crate)</option>
+              <option value="Beans">Beans (kg)</option>
+              <option value="Millet">Millet (kg)</option>
+              <option value="Maize">Maize (kg)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="priceInput">Price (₦)</label>
+            <input 
+              type="number" 
+              id="priceInput" 
+              placeholder="Enter price" 
+              min="0" 
+              step="100" 
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="locationSelect">Market Location</label>
+            <select id="locationSelect" required>
+              <option value="">-- Choose location --</option>
+              <option value="Abuja Central Market">Abuja Central Market</option>
+              <option value="Dei-Dei">Dei-Dei Market</option>
+              <option value="Wuse Market">Wuse Market</option>
+              <option value="Lekki Market">Lekki Market</option>
+              <option value="Kubwa Market">Kubwa Market</option>
+              <option value="Nyanya Market">Nyanya Market</option>
+              <option value="Zuba Market">Zuba Market</option>
+              <option value="Kuje Market">Kuje Market</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn">Submit Price</button>
+        </form>
+      </div>
+
+      <!-- Stats Card -->
+      <div class="card">
+        <h2>Market Overview</h2>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-label">Total Entries</div>
+            <div class="stat-value" id="totalEntries">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Avg Price (₦)</div>
+            <div class="stat-value" id="avgPrice">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Items Tracked</div>
+            <div class="stat-value" id="itemsCount">0</div>
+          </div>
+        </div>
+
+        <div id="emptyStatsState" class="empty-state" style="display: none;">
+          <p>No price data yet. Add your first entry!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Price List Card -->
+    <div class="card">
+      <h2>Price Entries</h2>
+      <div class="filter-controls">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="today">Today</button>
+        <button class="filter-btn" data-filter="week">Last 7 Days</button>
+      </div>
+      <div id="priceList" class="price-list">
+        <div class="empty-state">
+          <p>No price entries yet. Start tracking!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Card -->
+    <div class="chart-container">
+      <h2>Price Trends</h2>
+      <canvas id="priceChart"></canvas>
+      <div id="emptyChartState" class="empty-state" style="display: none;">
+        <p>Add more entries to see trends</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Data Management
+    const MarketTracker = {
+      storageKey: 'abujaFreshData',
+      chartInstance: null,
+
+      // Initialize app
+      init() {
+        this.loadData();
+        this.setupEventListeners();
+        this.render();
+      },
+
+      // Load data from localStorage
+      loadData() {
+        const stored = localStorage.getItem(this.storageKey);
+        this.data = stored ? JSON.parse(stored) : [];
+      },
+
+      // Save data to localStorage
+      saveData() {
+        localStorage.setItem(this.storageKey, JSON.stringify(this.data));
+      },
+
+      // Setup event listeners
+      setupEventListeners() {
+        document.getElementById('priceForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.addPrice();
+        });
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            this.renderPriceList(e.target.dataset.filter);
+          });
+        });
+      },
+
+      // Add new price entry
+      addPrice() {
+        const item = document.getElementById('itemSelect').value;
+        const price = parseFloat(document.getElementById('priceInput').value);
+        const location = document.getElementById('locationSelect').value;
+
+        if (!item || !price || !location) return;
+
+        const entry = {
+          id: Date.now(),
+          item,
+          price,
+          location,
+          date: new Date().toISOString(),
+        };
+
+        this.data.push(entry);
+        this.saveData();
+        this.render();
+
+        // Reset form
+        document.getElementById('priceForm').reset();
+      },
+
+      // Get average price for an item
+      getAveragePrice(item) {
+        const prices = this.data.filter(d => d.item === item).map(d => d.price);
+        return prices.length ? prices.reduce((a, b) => a + b) / prices.length : 0;
+      },
+
+      // Get trend for an item (comparing recent vs older)
+      getTrend(item) {
+        const prices = this.data.filter(d => d.item === item).sort((a, b) => new Date(a.date) - new Date(b.date));
+        if (prices.length < 2) return 'neutral';
+
+        const recent = prices.slice(-3).reduce((a, b) => a + b.price, 0) / Math.min(3, prices.length);
+        const older = prices.slice(0, -3).reduce((a, b) => a + b.price, 0) / Math.max(1, prices.length - 3);
+
+        if (recent > older) return 'up';
+        if (recent < older) return 'down';
+        return 'neutral';
+      },
+
+      // Delete entry
+      deleteEntry(id) {
+        this.data = this.data.filter(d => d.id !== id);
+        this.saveData();
+        this.render();
+      },
+
+      // Filter data by date range
+      filterByDate(filter) {
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const sevenDaysAgo = new Date(startOfToday.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+        return this.data.filter(d => {
+          const entryDate = new Date(d.date);
+          if (filter === 'today') return entryDate >= startOfToday;
+          if (filter === 'week') return entryDate >= sevenDaysAgo;
+          return true;
+        });
+      },
+
+      // Render all UI
+      render() {
+        this.updateStats();
+        this.renderPriceList('all');
+        this.renderChart();
+      },
+
+      // Update statistics
+      updateStats() {
+        const totalEntries = this.data.length;
+        const avgPrice = this.data.length ? this.data.reduce((a, b) => a + b.price, 0) / this.data.length : 0;
+        const uniqueItems = new Set(this.data.map(d => d.item)).size;
+
+        document.getElementById('totalEntries').textContent = totalEntries;
+        document.getElementById('avgPrice').textContent = avgPrice.toFixed(0);
+        document.getElementById('itemsCount').textContent = uniqueItems;
+
+        document.getElementById('emptyStatsState').style.display = this.data.length === 0 ? 'block' : 'none';
+      },
+
+      // Render price list
+      renderPriceList(filter = 'all') {
+        const filtered = this.filterByDate(filter);
+        const list = document.getElementById('priceList');
+
+        if (filtered.length === 0) {
+          list.innerHTML = '<div class="empty-state"><p>No price entries for this period</p></div>';
+          return;
+        }
+
+        // Group by item for better organization
+        const grouped = {};
+        filtered.forEach(entry => {
+          if (!grouped[entry.item]) grouped[entry.item] = [];
+          grouped[entry.item].push(entry);
+        });
+
+        let html = '';
+        Object.keys(grouped).sort().forEach(item => {
+          const entries = grouped[item].sort((a, b) => new Date(b.date) - new Date(a.date));
+          const latestEntry = entries[0];
+          const avgPrice = this.getAveragePrice(item);
+          const trend = this.getTrend(item);
+          const trendIcon = trend === 'up' ? '📈' : trend === 'down' ? '📉' : '➡️';
+          const trendClass = `trend-${trend}`;
+
+          entries.forEach((entry, idx) => {
+            const date = new Date(entry.date);
+            const timeStr = date.toLocaleDateString('en-NG') + ' ' + date.toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' });
+
+            html += `
+              <div class="price-item">
+                <div class="price-item-header">
+                  <div>
+                    <div class="price-item-name">${item}</div>
+                    <div class="price-item-meta">${entry.location}</div>
+                  </div>
+                  <div>
+                    <div class="price-item-price">₦${entry.price.toLocaleString()}</div>
+                    <button class="delete-btn" onclick="MarketTracker.deleteEntry(${entry.id})">Delete</button>
+                  </div>
+                </div>
+                <div class="price-item-meta">${timeStr}</div>
+                ${idx === 0 ? `<span class="price-item-trend ${trendClass}">${trendIcon} Avg: ₦${avgPrice.toFixed(0)}</span>` : ''}
+              </div>
+            `;
+          });
+        });
+
+        list.innerHTML = html;
+      },
+
+      // Render chart
+      renderChart() {
+        if (this.data.length < 2) {
+          document.getElementById('emptyChartState').style.display = 'block';
+          document.getElementById('priceChart').style.display = 'none';
+          return;
+        }
+
+        document.getElementById('emptyChartState').style.display = 'none';
+        document.getElementById('priceChart').style.display = 'block';
+
+        // Group prices by item by date
+        const itemData = {};
+        this.data.forEach(entry => {
+          const date = new Date(entry.date).toLocaleDateString('en-NG');
+          if (!itemData[entry.item]) itemData[entry.item] = {};
+          if (!itemData[entry.item][date]) itemData[entry.item][date] = [];
+          itemData[entry.item][date].push(entry.price);
+        });
+
+        // Calculate daily averages
+        const dailyAvgByItem = {};
+        Object.keys(itemData).forEach(item => {
+          dailyAvgByItem[item] = [];
+          Object.keys(itemData[item]).sort().forEach(date => {
+            const avg = itemData[item][date].reduce((a, b) => a + b) / itemData[item][date].length;
+            dailyAvgByItem[item].push({ date, avg });
+          });
+        });
+
+        // Get labels (all unique dates)
+        const allDates = new Set();
+        Object.values(dailyAvgByItem).forEach(data => data.forEach(d => allDates.add(d.date)));
+        const labels = Array.from(allDates).sort();
+
+        // Create datasets
+        const colors = ['#3182ce', '#d69e2e', '#38a169', '#c53030', '#805ad5', '#d4702e'];
+        const datasets = Object.keys(dailyAvgByItem).slice(0, 6).map((item, idx) => {
+          const itemPrices = dailyAvgByItem[item];
+          const data = labels.map(label => {
+            const found = itemPrices.find(d => d.date === label);
+            return found ? found.avg : null;
+          });
+
+          return {
+            label: item,
+            data,
+            borderColor: colors[idx],
+            backgroundColor: colors[idx] + '20',
+            tension: 0.4,
+            fill: false,
+            pointRadius: 5,
+            pointBackgroundColor: colors[idx],
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+          };
+        });
+
+        // Destroy old chart
+        if (this.chartInstance) this.chartInstance.destroy();
+
+        // Create new chart
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        this.chartInstance = new Chart(ctx, {
+          type: 'line',
+          data: { labels, datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: {
+                  boxWidth: 12,
+                  font: { size: 12, weight: '600' },
+                  color: '#2d3748',
+                  padding: 15,
+                },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: false,
+                ticks: {
+                  callback: (val) => '₦' + val.toLocaleString(),
+                  font: { size: 11 },
+                  color: '#718096',
+                },
+                grid: {
+                  color: '#e2e8f0',
+                  drawBorder: false,
+                },
+              },
+              x: {
+                grid: { display: false, drawBorder: false },
+                ticks: {
+                  font: { size: 11 },
+                  color: '#718096',
+                },
+              },
+            },
+          },
+        });
+      },
+    };
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => MarketTracker.init());
+  </script>
+</body>
+</html>
